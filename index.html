@@ -28,6 +28,10 @@ const CONFIG = {
   #arena { height: 220px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #fff; cursor: pointer; user-select: none; background: var(--accent); transition: background .1s; }
   #arena.wait { background: #E05B5B; }
   #arena.go { background: #27B85B; }
+  #arena.sss {background-image: url('195.jpg');
+  background-size: cover;   /* 박스를 꽉 채움 (비율 유지, 넘치는 부분은 잘림) */
+  background-position: center;
+  background-repeat: no-repeat;}
   .big { font-size: 52px; font-weight: 800; color: var(--accent); margin: 14px 0 4px; }
   .hint { color: var(--sub); font-size: 13px; margin-top: 10px; }
   input { padding: 10px 12px; border: 2px solid #E5E0D4; border-radius: 10px; font-size: 15px; width: 55%; margin-right: 6px; }
@@ -74,26 +78,48 @@ const CONFIG = {
   const saveBox = document.getElementById("saveBox");
   const KEY = "rank_reaction"; // 기록이 저장되는 창고 이름 (localStorage)
   let state = "idle", timer = null, goTime = 0, lastMs = 0;
+  let round = 0;
+let times = [];
+const MAX_ROUND = 3;
 
-  document.addEventListener("keydown" , (e) => {
-    for (let i = 0; i < 3; i++) {
-    for (let i = 0; i < 3; i++) {
-      if(e.code ==="Space"){
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
     if (state === "idle" || state === "done") {          // 시작
       state = "wait"; arena.className = "wait"; arena.textContent = "초록색을 기다리세요...";
       result.textContent = ""; saveBox.style.display = "none";
-      timer = setTimeout(() => { state = "go"; arena.className = "go"; arena.textContent = "지금 클릭!"; goTime = performance.now(); }, 1000 + Math.random() * 3000);
+      timer = setTimeout(() => {
+        state = "go"; arena.className = "go"; arena.textContent = "지금 클릭!"; goTime = performance.now();
+      }, 1000 + Math.random() * 3000);
     } else if (state === "wait") {                        // 반칙
-      clearTimeout(timer); state = "idle"; arena.className = ""; arena.textContent = "너무 빨라요! 다시 클릭해서 시작";
+      clearTimeout(timer);
+      state = "idle"; arena.className = ""; arena.textContent = "너무 빨라요! 다시 클릭해서 시작";
     } else if (state === "go") {                          // 성공
       lastMs = Math.round(performance.now() - goTime);
-      state = "done"; arena.className = ""; arena.textContent = "다시 도전하려면 클릭";
-      result.textContent = lastMs + " ms";
-      saveBox.style.display = "block";
+      times.push(lastMs);
+      round++;
+
+      if (round < MAX_ROUND) {
+        state = "wait"; arena.className = "wait"; arena.textContent = "초록색을 기다리세요...";
+        result.textContent = ""; saveBox.style.display = "none";
+      timer = setTimeout(() => {
+        state = "go"; arena.className = "go"; arena.textContent = "지금 클릭!"; goTime = performance.now();
+      }, 1000 + Math.random() * 3000);
+      } else {
+        // 3번 다 채웠으면 평균 계산
+        const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+        state = "sss";
+        arena.className = "sss";
+        arena.textContent = "다시 도전하려면 클릭";
+        result.textContent = `평균 ${avg} ms`;
+        saveBox.style.display = "block";
+        lastMs = avg; // 랭킹에는 평균값 저장
+
+        round = 0;
+        times = [];
+      }
     }
-    }
-    
-  }});
+  }
+});
 
   function loadRank() { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
 
