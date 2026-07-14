@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반응속도 게임</title>
+<script>
+/* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+   미션 1 — 아래 값을 바꾸면 우리 팀 게임이 됩니다!
+   title: 게임 제목 / subtitle: 한 줄 소개
+   accent: 우리 팀 색 (예: 파랑 #3B82F6, 초록 #27B85B, 보라 #8B5CF6)
+   team: 팀 이름
+   ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */
+const CONFIG = {
+  title: "번개 반응속도 테스트",
+  subtitle: "초록색이 되는 순간, 클릭!",
+  accent: "#3B82F6",
+  team: "0팀",
+};
+</script>
+<style>
+  :root { --accent: #3B82F6; --ink: #22335C; --sub: #6B7690; --bg: #FAF8F2; --card: #FFFFFF; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px; }
+  h1 { font-size: 30px; margin-top: 8px; }
+  .subtitle { color: var(--sub); margin: 6px 0 20px; }
+  .card { background: var(--card); border-radius: 16px; box-shadow: 0 4px 16px rgba(34,51,92,.08); padding: 24px; width: 100%; max-width: 460px; text-align: center; }
+  #arena { height: 220px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #fff; cursor: pointer; user-select: none; background: var(--accent); transition: background .1s; }
+  #arena.wait { background: #E05B5B; }
+  #arena.go { background: #27B85B; }
+  .big { font-size: 52px; font-weight: 800; color: var(--accent); margin: 14px 0 4px; }
+  .hint { color: var(--sub); font-size: 13px; margin-top: 10px; }
+  input { padding: 10px 12px; border: 2px solid #E5E0D4; border-radius: 10px; font-size: 15px; width: 55%; margin-right: 6px; }
+  button { padding: 10px 18px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; }
+  #rankCard { margin-top: 18px; }
+  h2 { font-size: 17px; margin-bottom: 10px; }
+  ol { text-align: left; padding-left: 26px; }
+  li { padding: 5px 0; border-bottom: 1px dashed #EEE8DA; }
+  li b { color: var(--accent); }
+  footer { margin-top: 22px; color: var(--sub); font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1 id="title"></h1>
+  <p class="subtitle" id="subtitle"></p>
+
+  <div class="card">
+    <div id="arena">클릭해서 시작</div>
+    <div class="big" id="result"></div>
+    <div id="saveBox" style="display:none">
+      <input id="name" placeholder="이름 입력" maxlength="8">
+      <button onclick="saveScore()">랭킹 등록</button>
+    </div>
+    <p class="hint">빨간색일 땐 기다리고, 초록색이 되면 최대한 빨리 클릭하세요.</p>
+  </div>
+
+  <div class="card" id="rankCard">
+    <h2>🏆 명예의 전당 (빠른 순 TOP 5)</h2>
+    <ol id="rank"></ol>
+  </div>
+
+  <footer id="footer"></footer>
+
+<script>
+  // ---- CONFIG 적용 (이 아래는 미션 3에서 Gemini와 함께 바꿔보세요) ----
+  document.documentElement.style.setProperty("--accent", CONFIG.accent);
+  document.getElementById("title").textContent = CONFIG.title;
+  document.getElementById("subtitle").textContent = CONFIG.subtitle;
+  document.getElementById("footer").textContent = CONFIG.team + " 제작 · 개발자 체험 캠프";
+  document.title = CONFIG.title;
+
+  const arena = document.getElementById("arena");
+  const result = document.getElementById("result");
+  const saveBox = document.getElementById("saveBox");
+  const KEY = "rank_reaction"; // 기록이 저장되는 창고 이름 (localStorage)
+  let state = "idle", timer = null, goTime = 0, lastMs = 0;
+
+  document.addEventListener("keydown" , (e) => {
+    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) {
+      if(e.code ==="Space"){
+    if (state === "idle" || state === "done") {          // 시작
+      state = "wait"; arena.className = "wait"; arena.textContent = "초록색을 기다리세요...";
+      result.textContent = ""; saveBox.style.display = "none";
+      timer = setTimeout(() => { state = "go"; arena.className = "go"; arena.textContent = "지금 클릭!"; goTime = performance.now(); }, 1000 + Math.random() * 3000);
+    } else if (state === "wait") {                        // 반칙
+      clearTimeout(timer); state = "idle"; arena.className = ""; arena.textContent = "너무 빨라요! 다시 클릭해서 시작";
+    } else if (state === "go") {                          // 성공
+      lastMs = Math.round(performance.now() - goTime);
+      state = "done"; arena.className = ""; arena.textContent = "다시 도전하려면 클릭";
+      result.textContent = lastMs + " ms";
+      saveBox.style.display = "block";
+    }
+    }
+    
+  }});
+
+  function loadRank() { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+
+  function renderRank() {
+    const list = loadRank().sort((a, b) => a.ms - b.ms).slice(0, 5);
+    document.getElementById("rank").innerHTML =
+      list.length ? list.map(r => `<li><b>${r.ms} ms</b> — ${r.name}</li>`).join("")
+                  : "<li>아직 기록이 없어요. 1등에 도전!</li>";
+  }
+
+  function saveScore() {
+    const name = document.getElementById("name").value.trim() || "익명";
+    const list = loadRank();
+    list.push({ name, ms: lastMs, at: Date.now() });
+    localStorage.setItem(KEY, JSON.stringify(list));      // ← 저장! (데이터베이스 대신 브라우저 창고 사용)
+    saveBox.style.display = "none";
+    document.getElementById("name").value = "";
+    renderRank();
+  }
+
+  renderRank();
+</script>+
+</body>
+</html>
