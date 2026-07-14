@@ -28,10 +28,10 @@ const CONFIG = {
   #arena { height: 220px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #fff; cursor: pointer; user-select: none; background: var(--accent); transition: background .1s; }
   #arena.wait { background: #E05B5B; }
   #arena.go { background: #27B85B; }
-  #arena.sss {background-image: url('195.jpg');
-  background-size: cover;   /* 박스를 꽉 채움 (비율 유지, 넘치는 부분은 잘림) */
-  background-position: center;
-  background-repeat: no-repeat;}
+  #arena.fff {background-image: url('195.jpg');background-size: 100% 100%;background-position: center;background-repeat: no-repeat;}
+  #arena.nnn {background-image: url('198.jpg');background-size: 100% 100%;background-position: center;background-repeat: no-repeat;}
+  #arena.sss {background-image: url('196.jpg');background-size: 100% 100%;background-position: center;background-repeat: no-repeat;}
+  #arena.ddd {background-image: url('uh.jpg');background-size: 100% 100%;background-position: center;background-repeat: no-repeat;}
   .big { font-size: 52px; font-weight: 800; color: var(--accent); margin: 14px 0 4px; }
   .hint { color: var(--sub); font-size: 13px; margin-top: 10px; }
   input { padding: 10px 12px; border: 2px solid #E5E0D4; border-radius: 10px; font-size: 15px; width: 55%; margin-right: 6px; }
@@ -107,15 +107,26 @@ document.addEventListener("keydown", (e) => {
       } else {
         // 3번 다 채웠으면 평균 계산
         const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
-        state = "sss";
-        arena.className = "sss";
-        arena.textContent = "다시 도전하려면 클릭";
-        result.textContent = `평균 ${avg} ms`;
-        saveBox.style.display = "block";
-        lastMs = avg; // 랭킹에는 평균값 저장
+        if(avg>= 670){
+          state = "ddd"; arena.className = "ddd";
+  result.innerHTML = `평균 ${avg} ms<br>넌 이미 죽어있다`;
+        }
+ else if (avg >= 350) {
+  state = "fff"; arena.className = "fff";
+  result.innerHTML = `평균 ${avg} ms<br>느려 터졌네 ㅋ`;
+} else if (avg >= 250) {
+  state = "nnn"; arena.className = "nnn";
+  result.innerHTML = `평균 ${avg} ms<br>흠..ㅇㅋ`;
+} else {
+  state = "sss"; arena.className = "sss";
+  result.innerHTML = `평균 ${avg} ms<br>근데 페이커보단 느리긴해`;
+}
+arena.textContent = "다시 도전하려면 클릭";
+saveBox.style.display = "block";
+lastMs = avg;
 
-        round = 0;
-        times = [];
+round = 0;
+times = [];
       }
     }
   }
